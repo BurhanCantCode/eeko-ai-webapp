@@ -1,31 +1,15 @@
-import { NextResponse } from "next/server";
-import { withClerkMiddleware, getAuth } from "@clerk/nextjs/server";
-import type { NextRequest } from "next/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const publicPaths = ["/", "/sign-in*", "/sign-up*"];
-
-const isPublic = (path: string) => {
-  return publicPaths.find(x =>
-    path.match(new RegExp(`^${x}$`.replace("*$", "($|/)")))
-  );
-};
-
-export default withClerkMiddleware((request: NextRequest) => {
-  if (isPublic(request.nextUrl.pathname)) {
-    return NextResponse.next();
-  }
-  // if the user is not signed in redirect them to the sign in page.
-  const { userId } = getAuth(request);
-
-  if (!userId) {
-    // redirect the users to /pages/sign-in/[[...index]].ts
-    const signInUrl = new URL('/sign-in', request.url);
-    signInUrl.searchParams.set('redirect_url', request.url);
-    return NextResponse.redirect(signInUrl);
-  }
-  return NextResponse.next();
-});
+// This example protects all routes including api/trpc routes
+// Please edit this to allow other routes to be public as needed.
+// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your middleware
+export default clerkMiddleware();
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  publicRoutes: ["/", "/sign-in", "/sign-up"],
+  matcher: [
+    "/((?!.*\\..*|_next).*)",
+    "/",
+    "/(api|trpc)(.*)",
+  ],
 };
